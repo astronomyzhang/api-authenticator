@@ -1,7 +1,8 @@
 package com.example.apiauthenticator;
 
+import com.example.apiauthenticator.Storage.CredentialStorage;
+import com.example.apiauthenticator.Storage.Impl.TestCredentialStorage;
 import lombok.Getter;
-import java.util.HashMap;
 import java.util.Map;
 
 @Getter
@@ -22,20 +23,18 @@ public class ApiRequest {
     }
 
     public static ApiRequest createFromFullUrl(String url){
-        String[] urlParts = url.split("\\?");
-        String baseUrl = urlParts[0];
-        String[] params = urlParts[1].split("&");
+        Map<String, String> paramMap = UrlUtils.resolveUrl(url);
 
-        Map<String, String> paramMap = new HashMap<>();
-        for(String param:params){
-            String[] paramSet = param.split("=");
-            paramMap.put(paramSet[0], paramSet[1]);
-        }
+        CredentialStorage cStorage = new TestCredentialStorage();
+        String passwd = cStorage.getPasswordByAppId(paramMap.get("appId"));
+        paramMap.put("passwd", passwd);
 
         //----------拼接字符串通过加密算法生成新token---------
-        String token = ;
-        return new ApiRequest(paramMap.get("appId"), token, baseUrl, paramMap.get("ts"));
+        String token = AuthToken.authToken(paramMap.get("baseUrl"), System.currentTimeMillis(), paramMap).getToken();
+        return new ApiRequest(paramMap.get("appId"), token, paramMap.get("baseUrl"), Long.valueOf(paramMap.get("ts")));
     }
+
+
 
 
 }
